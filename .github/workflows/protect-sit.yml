@@ -1,0 +1,26 @@
+name: Protect SIT Branches
+on:
+  push:
+    branches: [sit-frontend, sit-backend]
+jobs:
+  protect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pusher for sit-frontend
+        if: github.ref == 'refs/heads/sit-frontend'
+        run: |
+          # FrontendTeam 멤버 목록
+          FRONTEND_USERS=("frontend-user1" "frontend-user2")
+          if [[ ! " ${FRONTEND_USERS[*]} " =~ " ${{ github.actor }} " ]]; then
+            echo "Push to sit-frontend is only allowed for FrontendTeam!"
+            exit 1
+          fi
+      - name: Check pusher for sit-backend
+        if: github.ref == 'refs/heads/sit-backend'
+        run: |
+          # BackendTeam 멤버 목록
+          BACKEND_USERS=("backend-user1" "backend-user2")
+          if [[ ! " ${BACKEND_USERS[*]} " =~ " ${{ github.actor }} " ]]; then
+            echo "Push to sit-backend is only allowed for BackendTeam!"
+            exit 1
+          fi
