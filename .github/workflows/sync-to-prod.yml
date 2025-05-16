@@ -1,0 +1,38 @@
+name: Sync SIT to PROD
+on:
+  push:
+    branches: [sit-frontend, sit-backend]
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: sit-backend
+      - name: Checkout sit-frontend
+        uses: actions/checkout@v3
+        with:
+          ref: sit-frontend
+          path: frontend-temp
+      - name: Build Frontend
+        run: |
+          cd frontend-temp/frontend
+          npm install && npm run build
+          mkdir -p backend/static
+          cp -r build/* backend/static/
+      - name: Checkout reservation-prod
+        uses: actions/checkout@v3
+        with:
+          repository: netsedu/reservation-prod
+          token: ${{ secrets.PROD_REPO_TOKEN }}
+          path: prod-temp
+      - name: Sync to reservation-prod
+        run: |
+          cp -r frontend-temp/frontend prod-temp/frontend
+          cp -r backend prod-temp/backend
+          cd prod-temp
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Sync from sit-frontend and sit-backend"
+          git push origin main
